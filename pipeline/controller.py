@@ -1,78 +1,83 @@
-import os
-import json
-import time
-import warnings
+import os, json, time, warnings, datetime, queue, asyncio, websockets, uuid
 from threading import Thread
-import datetime
-from read_gps import read_gps
 from record_sound import record_sound
-import asyncio, websockets, json, queue
 from run_inference import run_inference
-from tensorflow.keras.models import load_model
-import logging
 
 warnings.filterwarnings("ignore")
-latest_audio = None
-sample_rate = None
 
-audio_queue = queue.Queue()
-result_queue = queue.Queue()
+# ───────────── CONFIG ─────────────────────────────────────────
+SERVER_URI = "ws://192.168.102.198:8000/ws"
+CHUNK_SEC  = 5
+AUDIO_QUEUE  = queue.Queue(maxsize=1)        # keep ONLY the latest chunk
+RESULT_QUEUE = queue.Queue()
+LOG_PATH   = "logs.txt"
+os.makedirs("outputs", exist_ok=True)
+print("✔ outputs/ folder ready")
+# ───────────────────────────────────────────────────────────────
 
-URI = "ws://192.168.102.198:8000/ws"          # change to server address
 
-OUTPUT_DIR = "outputs"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-print(f"Ensured output directory '{OUTPUT_DIR}' exists.")
-
-def collect_input():
-    global latest_audio, sample_rate
+# 1️⃣  Recorder thread ---------------------------------------------------
+def record_loop():
     while True:
-        audio, sample_rate = record_sound()  # 5s chunk
-        audio_queue.put(audio)
-        time.sleep(1)
+        t0 = time.time()
+        audio, sr = record_sound()           # ← blocks ~5 s
+        try:
+            AUDIO_QUEUE.put_nowait((audio, sr))
+        except queue.Full:
+            AUDIO_QUEUE.get_nowait()         # drop stale
+            AUDIO_QUEUE.put_nowait((audio, sr))
+        # No extra sleep; keeps pace with microphone
+        print(f"[RECORD] {time.time()-t0:.2f}s")   # optional timing
 
-def run_model_loop():
-    global latest_audio
+
+# 2️⃣  Inference thread --------------------------------------------------
+def inference_loop():
     while True:
-        audio = audio_queue.get()
+        audio, sr = AUDIO_QUEUE.get()        # wait for fresh chunk
+        t0 = time.time()
+        cls, conf = run_inference(audio, sr) # your model fn
 
-        classes, confidence = run_inference(
-            audio, sample_rate)
+        result = {
+            "id":        str(uuid.uuid4()),
+            "timestamp": datetime.datetime.utcnow()
+                          .isoformat(timespec="milliseconds") + "Z",
+            "latitude":  "27.712623 N",      # TODO: real GPS thread
+            "longitude": "85.342602 E",
+            "speed":     "NA",
+            "class":     cls,
+            "confidence": float(conf)
+        }
+        RESULT_QUEUE.put(result)
+        print(f"[INFER ] {time.time()-t0:.2f}s -> {cls} {conf:.2f}")
 
-        result = read_gps()
-        if result is None:
-            result = {}
-            result['time'] = str(datetime.date.today())
-            result['date'] = str(datetime.datetime.now().strftime("%H:%M:%S"))
-            result['latitude'] = "27.712623 N"
-            result['longitude'] = "85.342602 E"
-            result['speed'] = "NA"
 
-        result['class'] = classes
-        result['confidence'] = confidence
-
-        result_queue.put(result)
-
-async def ws_send_loop():
-    uri = "ws://192.168.102.198:8000/ws"
-    async with websockets.connect(uri) as ws:
-        while True:
-            result = await asyncio.get_event_loop().run_in_executor(
-                None, result_queue.get
-            )
-            await ws.send(json.dumps(result))
-
-            with open('logs.txt', 'a') as f:
-                f.writelines(json.dumps(result))
-                f.write('\n')
+# 3️⃣  WebSocket sender (runs inside its own event-loop thread) ----------
+async def ws_sender():
+    while True:
+        try:
+            async with websockets.connect(SERVER_URI) as ws, \
+                       open(LOG_PATH, "a", buffering=1) as logf:
+                print("WS connected ✅")
+                while True:
+                    # get() is blocking; run it in thread-pool so event-loop stays alive
+                    result = await asyncio.get_event_loop().run_in_executor(
+                        None, RESULT_QUEUE.get
+                    )
+                    await ws.send(json.dumps(result))
+                    logf.write(json.dumps(result) + "\n")
+        except Exception as e:
+            print("WS error:", e, "— retrying in 3 s")
+            await asyncio.sleep(3)
 
 def start_ws_thread():
-    asyncio.run(ws_send_loop())
-
-Thread(target=collect_input, daemon=True).start()
-Thread(target=run_model_loop, daemon=True).start()
-Thread(target=start_ws_thread, daemon=True).start()
+    asyncio.run(ws_sender())
 
 
+# ───────────── Launch threads ─────────────────────────────────
+Thread(target=record_loop,    daemon=True).start()
+Thread(target=inference_loop, daemon=True).start()
+Thread(target=start_ws_thread,daemon=True).start()
+
+# Keep main thread alive
 while True:
-    time.sleep(1)
+    time.sleep(10)
