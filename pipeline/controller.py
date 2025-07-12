@@ -9,6 +9,7 @@ from record_sound import record_sound
 import asyncio, websockets, json, queue
 from run_inference import run_inference
 from tensorflow.keras.models import load_model
+import logging
 
 warnings.filterwarnings("ignore")
 latest_audio = None
@@ -60,6 +61,10 @@ async def ws_send_loop():
                 None, result_queue.get
             )
             await ws.send(json.dumps(result))
+
+            with open('logs.txt', 'a') as f:
+                f.writelines(json.dumps(result))
+                f.write('\n')
 
 def start_ws_thread():
     asyncio.run(ws_send_loop())
