@@ -25,12 +25,6 @@ const Home = () => {
                 <span>Open Dashboard</span>
                 <ArrowRight className="h-5 w-5" />
               </Link>
-              <Link
-                to="/reports"
-                className="border-2 border-[#95D5B2] text-[#95D5B2] px-8 py-4 rounded-xl font-semibold hover:bg-[#95D5B2] hover:text-[#1B4332] transition-all duration-300"
-              >
-                View Reports
-              </Link>
             </div>
           </div>
         </div>
