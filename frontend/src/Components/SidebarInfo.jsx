@@ -10,6 +10,21 @@ const SidebarInfo = ({
     lastUpdateTime,
     payloadData = [],
 }) => {
+    const getThreatLevel = (soundType) => {
+        const type = soundType?.toLowerCase();
+        if (type === "axe_cutting" || type === "chainsaw") {
+            return "high";
+        } else if (
+            type === "truck" ||
+            type === "human_voice" ||
+            type === "machinery"
+        ) {
+            return "medium";
+        } else {
+            return "low";
+        }
+    };
+
     const formatConfidence = (confidence) => {
         const conf = parseFloat(confidence);
         if (isNaN(conf)) return "N/A";
@@ -73,33 +88,36 @@ const SidebarInfo = ({
                 </div>
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                     {recentDetections.length > 0 ? (
-                        recentDetections.map((detection) => (
-                            <div
-                                key={detection.id}
-                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <div
-                                        className={`p-2 rounded-lg ${getThreatColor(
-                                            detection.threat
-                                        )}`}
-                                    >
-                                        {getThreatIcon(detection.threat)}
+                        recentDetections.map((detection) => {
+                            const threatLevel = getThreatLevel(detection.type);
+                            return (
+                                <div
+                                    key={detection.id}
+                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        <div
+                                            className={`p-2 rounded-lg ${getThreatColor(
+                                                threatLevel
+                                            )}`}
+                                        >
+                                            {getThreatIcon(threatLevel)}
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-gray-900">
+                                                {detection.type}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {detection.time}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-medium text-gray-900">
-                                            {detection.type}
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                            {detection.time}
-                                        </div>
+                                    <div className="text-sm font-medium text-gray-600">
+                                        {formatConfidence(detection.confidence)}
                                     </div>
                                 </div>
-                                <div className="text-sm font-medium text-gray-600">
-                                    {formatConfidence(detection.confidence)}
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <div className="text-center py-8">
                             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -123,38 +141,41 @@ const SidebarInfo = ({
                 </div>
                 <div className="space-y-3">
                     {soundTypes.length > 0 ? (
-                        soundTypes.map((type, index) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                            >
-                                <div className="flex items-center space-x-3">
-                                    {getThreatIcon(type.threat)}
-                                    <div>
-                                        <p className="font-medium text-gray-900">
-                                            {type.name}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                            {type.count} detection
-                                            {type.count > 1 ? "s" : ""}
+                        soundTypes.map((type, index) => {
+                            const threatLevel = getThreatLevel(type.name);
+                            return (
+                                <div
+                                    key={index}
+                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                >
+                                    <div className="flex items-center space-x-3">
+                                        {getThreatIcon(threatLevel)}
+                                        <div>
+                                            <p className="font-medium text-gray-900">
+                                                {type.name}
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                {type.count} detection
+                                                {type.count > 1 ? "s" : ""}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div
+                                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getThreatColor(
+                                                threatLevel
+                                            )}`}
+                                        >
+                                            {threatLevel}
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {formatConfidence(type.confidence)}{" "}
+                                            confidence
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <div
-                                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getThreatColor(
-                                            type.threat
-                                        )}`}
-                                    >
-                                        {type.threat}
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {formatConfidence(type.confidence)}{" "}
-                                        confidence
-                                    </p>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <div className="text-center py-8 text-gray-500">
                             <Database className="h-8 w-8 mx-auto mb-2 text-gray-300" />
@@ -166,6 +187,5 @@ const SidebarInfo = ({
         </div>
     );
 };
-
 
 export default SidebarInfo;
