@@ -1,93 +1,73 @@
-import time
-from record_sound import record_sound
-from threading import Thread, Lock
-from run_inference import run_inference
-import warnings
-import requests
-import json
-from read_gps import read_gps
-import requests
-import json
-from datetime import datetime
-from tensorflow.keras.models import load_model
 import os
-import numpy as np
+import json
+import time
+import warnings
+from threading import Thread
+import datetime
+from read_gps import read_gps
+from record_sound import record_sound
+import asyncio, websockets, json, queue
+from run_inference import run_inference
+from tensorflow.keras.models import load_model
 
 warnings.filterwarnings("ignore")
-counter = 0
-lock = Lock()
 latest_audio = None
 sample_rate = None
+
+audio_queue = queue.Queue()
+result_queue = queue.Queue()
+
+URI = "ws://192.168.102.198:8000/ws"          # change to server address
 
 OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 print(f"Ensured output directory '{OUTPUT_DIR}' exists.")
 
-print("Loading Keras Model")
-keras_model = load_model('multi_class_audio_classifier.h5')
-print("Keras Model Loaded SucessFully.")
-
-
 def collect_input():
-    global latest_audio, sample_rate, counter
+    global latest_audio, sample_rate
     while True:
-        data, sample_rate = record_sound(counter)  # 5s chunk
-        counter += 1
-        with lock:
-            latest_audio = data  # overwrite old one
-
+        audio, sample_rate = record_sound()  # 5s chunk
+        audio_queue.put(audio)
+        time.sleep(1)
 
 def run_model_loop():
     global latest_audio
     while True:
-        time.sleep(0.1)
-        with lock:
-            if latest_audio is not None:
-                data = latest_audio
-                latest_audio = None
-            else:
-                data = None
+        audio = audio_queue.get()
 
-        if data is not None:
-            # --- START: MODIFICATION FOR TIMING ---
-            start_time = time.perf_counter()
+        classes, confidence = run_inference(
+            audio, sample_rate)
 
-            classes, percentages, key_pairs = run_inference(
-                data, keras_model, sample_rate)
+        result = read_gps()
+        if result is None:
+            result = {}
+            result['time'] = str(datetime.date.today())
+            result['date'] = str(datetime.datetime.now().strftime("%H:%M:%S"))
+            result['latitude'] = "27.712623 N"
+            result['longitude'] = "85.342602 E"
+            result['speed'] = "NA"
 
-            end_time = time.perf_counter()
-            inference_time = end_time - start_time
-            # --- END: MODIFICATION FOR TIMING ---
+        result['class'] = classes
+        result['confidence'] = confidence
 
-            post_val = read_gps()
-            if post_val is None:
-                post_val = {}
-                post_val['time'] = str(datetime.now())
-                post_val['date'] = str(datetime.now())
-                post_val['latitude'] = "27.712623 N"
-                post_val['longitude'] = "85.342602 E"
-                post_val['speed'] = "NA"
-            post_val['classes'] = classes
-            post_val['confidence'] = percentages
+        result_queue.put(result)
 
-            # requests.post("", json.dumps(post_val))
-            # Print the results
-            print(f"Inference time: {inference_time:.4f} seconds")  # New line
-            # print("Inference Output: ", classes)
-            # print("Inference Probs: ", percentages)
-            for key in key_pairs.keys():
-                print(
-                    f"{key} = {key_pairs[key]:.2f}%")
-            print(f"Time: {post_val['time']}")
-            print(f"Date: {post_val['date']}")
-            print(f"Latitude: {post_val['latitude']}")
-            print(f"Longitude: {post_val['longitude']}")
-            print(f"Speed: {post_val['speed']}")
-            print("-" * 20)  # Added a separator for readability
+async def ws_send_loop():
+    uri = "ws://192.168.102.198:8000/ws"
+    async with websockets.connect(uri) as ws:
+        while True:
+            result = await asyncio.get_event_loop().run_in_executor(
+                None, result_queue.get
+            )
+            await ws.send(json.dumps(result))
 
+def start_ws_thread():
+    asyncio.run(ws_send_loop())
 
 Thread(target=collect_input, daemon=True).start()
 Thread(target=run_model_loop, daemon=True).start()
+Thread(target=start_ws_thread, daemon=True).start()
+
 
 while True:
     time.sleep(1)

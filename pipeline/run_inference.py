@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow_hub as hub
 import pickle
 import joblib
+from tensorflow.keras.models import load_model
 
 print("Loading Label Binarizer")
 label_binarizer = joblib.load('label_binarizer.pkl')
@@ -12,8 +13,11 @@ print("Loading YAMNet model...")
 yamnet_model = hub.load('https://tfhub.dev/google/yamnet/1')
 print("YAMNet loaded.")
 
+print("Loading Keras Model")
+keras_model = load_model('multi_class_audio_classifier.h5')
+print("Keras Model Loaded SucessFully.")
 
-def run_inference(waveform, keras_model, sr=16000, window_size=2.0, hop_size=1.0,
+def run_inference(waveform, sr=16000, window_size=2.0, hop_size=1.0,
                   confidence_threshold=0.6, unknown_threshold=0.4):
     """
     Aggregate softmax probabilities over sliding windows in an audio file,
@@ -70,7 +74,4 @@ def run_inference(waveform, keras_model, sr=16000, window_size=2.0, hop_size=1.0
     final_classes = [str(x) for x in final_classes]
     final_percentages = [float(x) for x in final_percentages]
 
-    key_V_pair = {final_classes[i]: final_percentages[i]
-                  for i in range(len(final_classes))}
-
-    return final_classes, final_percentages, key_V_pair
+    return final_classes, final_percentages

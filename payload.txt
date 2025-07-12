@@ -1,0 +1,7 @@
+time = string
+date = string
+latitude = string
+longitude = string
+speed = string
+class = list
+confidence = list
