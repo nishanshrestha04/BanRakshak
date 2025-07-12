@@ -1,17 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-    Home,
-    BarChart3,
-    FileText,
-    Settings,
-    TreePine,
-    Shield,
-    Bell,
-    Users,
-    MapPin,
-    Activity,
-} from "lucide-react";
+import { Home, Bell, Activity, TreePine } from "lucide-react";
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const location = useLocation();
@@ -19,7 +8,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const isActive = (path) => location.pathname === path;
 
     const navigationItems = [
-        { path: "/overview", icon: Home, label: "Overview" },
+        { path: "/dashboard", icon: Home, label: "Dashboard" },
         { path: "/analytics", icon: Activity, label: "Analytics" },
         { path: "/alerts", icon: Bell, label: "Alerts" },
     ];
@@ -29,17 +18,38 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             {/* Mobile overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                    className="fixed inset-0 bg-opacity-50 z-30"
                     onClick={toggleSidebar}
-                />
+                ></div>
             )}
 
             {/* Sidebar */}
             <div
-                className={`fixed left-0 top-[104px] h-[calc(100vh-104px)] w-64 bg-[#1B4332] text-white z-50 transform transition-transform duration-300 ease-in-out ${
+                className={`fixed left-0 top-[104px] h-screen w-64 bg-white text-gray-800 z-40 transform transition-transform duration-300 ease-in-out shadow-lg ${
                     isOpen ? "translate-x-0" : "-translate-x-full"
-                } md:translate-x-0 md:static md:z-auto flex flex-col`}
+                } md:translate-x-0 md:static md:z-auto flex flex-col border-r border-gray-200`}
             >
+                {/* Logo Section */}
+                <Link
+                    to="/"
+                    onClick={() => window.innerWidth < 768 && toggleSidebar()}
+                    className="block p-6 border-b border-gray-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-300 group"
+                >
+                    <div className="flex items-center space-x-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-green-400 rounded-xl blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+                            <div className="relative bg-gradient-to-br from-green-400 to-emerald-500 p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                                <TreePine className="h-8 w-8 text-white" />
+                            </div>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 font-amita group-hover:text-green-600 transition-colors duration-300">
+                                वन रक्षक
+                            </h2>
+                        </div>
+                    </div>
+                </Link>
+
                 {/* Navigation */}
                 <nav className="flex-1 overflow-y-auto mt-6 px-4">
                     <div className="space-y-2">
@@ -55,8 +65,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                     }
                                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                                         isActive(item.path)
-                                            ? "bg-[#2D6A4F] text-[#95D5B2] shadow-md"
-                                            : "text-gray-300 hover:bg-[#2D6A4F] hover:text-white"
+                                            ? "bg-[#22C55E]/20 text-[#22C55E]"
+                                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                                     }`}
                                 >
                                     <Icon className="h-5 w-5" />
@@ -68,14 +78,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         })}
                     </div>
                 </nav>
-
-                {/* Status Section */}
-                {/* <div className="flex-shrink-0 p-4 border-t border-[#2D6A4F]">
-                    <div className="flex items-center space-x-2 text-sm text-gray-300">
-                        <Shield className="h-4 w-4 text-[#95D5B2]" />
-                        <span>System Active</span>
-                    </div>
-                </div> */}
             </div>
         </>
     );

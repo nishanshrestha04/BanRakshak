@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
-import { Download } from "lucide-react";
+import { Download, Loader2, Wifi, WifiOff } from "lucide-react";
+import { analyticsService } from "../../services/analyticsService";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -21,14 +22,56 @@ ChartJS.register(
 );
 
 const MonthlyChart = () => {
-    const monthlyData = [
-        { month: "Jan", detections: 100, alerts: 12 },
-        { month: "Feb", detections: 52, alerts: 8 },
-        { month: "Mar", detections: 38, alerts: 15 },
-        { month: "Apr", detections: 61, alerts: 20 },
-        { month: "May", detections: 55, alerts: 18 },
-        { month: "Jun", detections: 67, alerts: 25 },
-    ];
+    const [monthlyData, setMonthlyData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
+
+    useEffect(() => {
+        const fetchMonthlyData = async () => {
+            try {
+                const data = await analyticsService.getMonthlyData();
+                setMonthlyData(data);
+            } catch (error) {
+                console.error("Error loading monthly data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMonthlyData();
+
+        // Subscribe to real-time updates
+        const unsubscribe = analyticsService.subscribe((data) => {
+            if (data.type === "monthly_data") {
+                setMonthlyData(data.payload);
+                setIsConnected(true);
+            } else if (data.type === "connection") {
+                setIsConnected(data.connected);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                        Monthly Detections & Alerts
+                    </h3>
+                    <button className="text-[#1B4332] hover:text-[#2D6A4F]">
+                        <Download className="h-5 w-5" />
+                    </button>
+                </div>
+                <div className="h-64 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+            </div>
+        );
+    }
 
     const chartData = {
         labels: monthlyData.map((data) => data.month),
@@ -84,7 +127,23 @@ const MonthlyChart = () => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+        <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2 relative">
+            {/* Real-time indicator */}
+            <div className="absolute top-4 right-12 flex items-center space-x-2">
+                {isConnected ? (
+                    <Wifi className="h-4 w-4 text-green-500" />
+                ) : (
+                    <WifiOff className="h-4 w-4 text-red-500" />
+                )}
+                <span
+                    className={`text-xs ${
+                        isConnected ? "text-green-500" : "text-red-500"
+                    }`}
+                >
+                    {isConnected ? "Live" : "Offline"}
+                </span>
+            </div>
+
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">
                     Monthly Detections & Alerts
@@ -106,7 +165,13 @@ const MonthlyChart = () => {
             </div>
 
             <div className="h-64">
-                <Bar data={chartData} options={chartOptions} />
+                {monthlyData.length > 0 ? (
+                    <Bar data={chartData} options={chartOptions} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                        No monthly data available
+                    </div>
+                )}
             </div>
         </div>
     );

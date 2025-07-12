@@ -1,21 +1,38 @@
-import React, { useState } from "react";
-import { Menu } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Menu, Wifi, WifiOff } from "lucide-react";
 import Sidebar from "../Components/Sidebar";
 import StatsCards from "../Components/Analytics/StatsCards";
 import MonthlyChart from "../Components/Analytics/MonthlyChart";
 import SoundDetectionChart from "../Components/Analytics/SoundDetectionChart";
 import RecentAlerts from "../Components/Analytics/RecentAlerts";
-import ActivityHeatmap from "../Components/Analytics/ActivityHeatmap";
+import useWebSocket from "../hooks/useWebSocket";
 
 const Analytics = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [realTimeData, setRealTimeData] = useState(null);
+
+    // WebSocket connection for real-time analytics data
+    const {
+        data: wsData,
+        isConnected,
+        error,
+    } = useWebSocket("ws://localhost:8080/ws/analytics", {
+        maxReconnectAttempts: 5,
+        reconnectDelay: 3000,
+    });
+
+    useEffect(() => {
+        if (wsData) {
+            setRealTimeData(wsData);
+        }
+    }, [wsData]);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
     return (
-        <div className="flex h-screen bg-gray-50 pt-[104px]">
+        <div className="flex h-screen bg-gray-50">
             <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -34,30 +51,51 @@ const Analytics = () => {
                     <div className="p-6">
                         {/* Header */}
                         <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                                Analytics Dashboard
-                            </h1>
-                            <p className="text-gray-600">
-                                Forest monitoring insights and trends
-                            </p>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                                        Analytics Dashboard
+                                    </h1>
+                                    <p className="text-gray-600">
+                                        Forest monitoring insights and trends
+                                    </p>
+                                </div>
+
+                                {/* Connection Status */}
+                                <div className="flex items-center space-x-2">
+                                    {isConnected ? (
+                                        <Wifi className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                        <WifiOff className="h-5 w-5 text-red-500" />
+                                    )}
+                                    <span
+                                        className={`text-sm font-medium ${
+                                            isConnected
+                                                ? "text-green-600"
+                                                : "text-red-600"
+                                        }`}
+                                    >
+                                        {isConnected
+                                            ? "Live Data"
+                                            : "Disconnected"}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Stats Cards */}
-                        <StatsCards />
+                        <StatsCards realTimeData={realTimeData} />
 
                         {/* Charts Section */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            <MonthlyChart />
-                            <SoundDetectionChart />
+                            <MonthlyChart realTimeData={realTimeData} />
+                            <SoundDetectionChart realTimeData={realTimeData} />
                         </div>
 
                         {/* Recent Alerts Section */}
                         <div className="grid grid-cols-1 gap-6 mb-8">
-                            <RecentAlerts />
+                            <RecentAlerts realTimeData={realTimeData} />
                         </div>
-
-                        {/* Activity Map Section */}
-                        <ActivityHeatmap />
                     </div>
                 </main>
             </div>

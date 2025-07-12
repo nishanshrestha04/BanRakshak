@@ -1,29 +1,63 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Loader2, Wifi, WifiOff } from "lucide-react";
+import { analyticsService } from "../../services/analyticsService";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const SoundDetectionChart = () => {
-    const recentAlerts = [
-        { type: "Chainsaw", severity: "High" },
-        { type: "Heavy Machinery", severity: "Medium" },
-        { type: "Vehicle", severity: "Low" },
-        { type: "Chainsaw", severity: "High" },
-        { type: "Gunshot", severity: "High" },
-        { type: "Heavy Machinery", severity: "Medium" },
-    ];
+    const [soundData, setSoundData] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
 
-    const soundTypes = recentAlerts.reduce((acc, alert) => {
-        acc[alert.type] = (acc[alert.type] || 0) + 1;
-        return acc;
-    }, {});
+    useEffect(() => {
+        const fetchSoundData = async () => {
+            try {
+                const data = await analyticsService.getSoundDetectionData();
+                setSoundData(data);
+            } catch (error) {
+                console.error("Error loading sound detection data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSoundData();
+
+        // Subscribe to real-time updates
+        const unsubscribe = analyticsService.subscribe((data) => {
+            if (data.type === "sound_detection") {
+                setSoundData(data.payload);
+                setIsConnected(true);
+            } else if (data.type === "connection") {
+                setIsConnected(data.connected);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                    Sound Detection
+                </h3>
+                <div className="h-64 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+            </div>
+        );
+    }
 
     const soundChartData = {
-        labels: Object.keys(soundTypes),
+        labels: Object.keys(soundData),
         datasets: [
             {
-                data: Object.values(soundTypes),
+                data: Object.values(soundData),
                 backgroundColor: [
                     "#FF6B6B",
                     "#4ECDC4",
@@ -80,12 +114,34 @@ const SoundDetectionChart = () => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 relative">
+            {/* Real-time indicator */}
+            <div className="absolute top-4 right-4 flex items-center space-x-2">
+                {isConnected ? (
+                    <Wifi className="h-4 w-4 text-green-500" />
+                ) : (
+                    <WifiOff className="h-4 w-4 text-red-500" />
+                )}
+                <span
+                    className={`text-xs ${
+                        isConnected ? "text-green-500" : "text-red-500"
+                    }`}
+                >
+                    {isConnected ? "Live" : "Offline"}
+                </span>
+            </div>
+
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Sound Detection
             </h3>
             <div className="h-64">
-                <Pie data={soundChartData} options={soundChartOptions} />
+                {Object.keys(soundData).length > 0 ? (
+                    <Pie data={soundChartData} options={soundChartOptions} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                        No sound detection data available
+                    </div>
+                )}
             </div>
         </div>
     );
