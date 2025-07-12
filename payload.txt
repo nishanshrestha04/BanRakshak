@@ -3,5 +3,5 @@ date = string
 latitude = string
 longitude = string
 speed = string
-class = list
-confidence = list
+class = list[str]
+confidence = list[float]
