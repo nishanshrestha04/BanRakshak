@@ -1,79 +1,77 @@
 import os
-import json
-import time
-import warnings
-from threading import Thread
-import datetime
-# from read_gps import read_gps
-from record_sound import record_sound
-import asyncio, websockets, json, queue
-from run_inference import run_inference
-import logging
+import numpy as np
+import tensorflow_hub as hub
+import pickle
+import joblib
+from tensorflow.keras.models import load_model
 
-warnings.filterwarnings("ignore")
-latest_audio = None
-sample_rate = None
+print("Loading Label Binarizer")
+label_binarizer = joblib.load('label_binarizer.pkl')
+print("Loaded Sucessfully")
 
-audio_queue = queue.Queue()
-result_queue = queue.Queue()
+print("Loading YAMNet model...")
+yamnet_model = hub.load('https://tfhub.dev/google/yamnet/1')
+print("YAMNet loaded.")
 
-URI = "ws://192.168.102.198:8000/ws"          # change to server address
+print("Loading Keras Model")
+keras_model = load_model('multi_class_audio_classifier.h5')
+print("Keras Model Loaded SucessFully.")
 
-OUTPUT_DIR = "outputs"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-print(f"Ensured output directory '{OUTPUT_DIR}' exists.")
+def run_inference(waveform, sr=16000, window_size=2.0, hop_size=1.0,
+                  confidence_threshold=0.6, unknown_threshold=0.4):
+    """
+    Aggregate softmax probabilities over sliding windows in an audio file,
+    only including windows where max class probability >= confidence_threshold.
+    Assign residual probability to 'unknown' class if confidence is low.
+    """
 
-def collect_input():
-    global latest_audio, sample_rate
-    while True:
-        audio, sample_rate = record_sound()  # 5s chunk
-        audio_queue.put(audio)
-        time.sleep(1)
+    waveform = waveform.astype(np.float32)
 
-def run_model_loop():
-    global latest_audio
-    while True:
-        audio = audio_queue.get()
+    window_samples = int(window_size * sr)
+    hop_samples = int(hop_size * sr)
 
-        classes, confidence = run_inference(
-            audio, sample_rate)
+    num_windows = max(1, (len(waveform) - window_samples) // hop_samples + 1)
 
-        result = None
-        if result is None:
-            result = {}
-            result['time'] = str(datetime.date.today())
-            result['date'] = str(datetime.datetime.now().strftime("%H:%M:%S"))
-            result['latitude'] = "27.712623 N"
-            result['longitude'] = "85.342602 E"
-            result['speed'] = "NA"
+    prob_sums = np.zeros(len(label_binarizer.classes_))
+    confident_window_count = 0
 
-        result['class'] = classes
-        result['confidence'] = confidence
+    for i in range(num_windows):
+        start_sample = i * hop_samples
+        end_sample = start_sample + window_samples
+        window_waveform = waveform[start_sample:end_sample]
 
-        result_queue.put(result)
+        if len(window_waveform) < window_samples:
+            window_waveform = np.pad(
+                window_waveform, (0, window_samples - len(window_waveform)))
 
-async def ws_send_loop():
-    uri = "ws://192.168.102.198:8000/ws"
-    async with websockets.connect(uri) as ws:
-        while True:
-            result = await asyncio.get_event_loop().run_in_executor(
-                None, result_queue.get
-            )
-            await ws.send(json.dumps(result))
+        scores, embeddings, _ = yamnet_model(window_waveform)
+        mean_embedding = np.mean(embeddings.numpy(), axis=0).reshape(1, -1)
 
-            with open('logs.txt', 'a') as f:
-                f.writelines(json.dumps(result))
-                f.write('\n')
+        probs = keras_model.predict(mean_embedding)[0]
+        max_prob = np.max(probs)
 
-def start_ws_thread():
-    asyncio.run(ws_send_loop())
+        if max_prob >= confidence_threshold:
+            prob_sums += probs
+            confident_window_count += 1
+        else:
+            # Window considered uncertain; ignored in known class aggregation
+            pass
 
-Thread(target=collect_input, daemon=True).start()
-Thread(target=run_model_loop, daemon=True).start()
-Thread(target=start_ws_thread, daemon=True).start()
+    if confident_window_count > 0:
+        avg_probs = prob_sums / confident_window_count
+    else:
+        avg_probs = np.zeros(len(label_binarizer.classes_))
 
+    unknown_prob = 0.0
+    # If too few confident windows or max avg prob low, assign unknown prob
+    if confident_window_count < num_windows or np.max(avg_probs) < unknown_threshold:
+        unknown_prob = 1.0 - np.sum(avg_probs)
+        unknown_prob = max(0.0, unknown_prob)
 
-while True:
-    time.sleep(1)
+    final_classes = list(label_binarizer.classes_) + ['unknown']
+    final_percentages = list(avg_probs * 100) + [unknown_prob * 100]
 
+    final_classes = [str(x) for x in final_classes]
+    final_percentages = [float(x) for x in final_percentages]
 
+    return final_classes, final_percentages
