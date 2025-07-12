@@ -24,6 +24,9 @@ async def relay(ws: WebSocket):
             except json.JSONDecodeError:
                 continue                           # Ignore bad frames
 
+            # === PRINT THE RECEIVED MESSAGE ===
+            print(f"📩 Received from {ws.client}: {msg}")
+
             # ensure id + timestamp
             msg.setdefault("id", str(uuid.uuid4()))
             msg.setdefault("timestamp", iso_now())
@@ -34,6 +37,7 @@ async def relay(ws: WebSocket):
                 try: await cli.send_text(json.dumps(msg))
                 except WebSocketDisconnect: dead.add(cli)
             CLIENTS.difference_update(dead)
+
 
     finally:
         CLIENTS.discard(ws)
