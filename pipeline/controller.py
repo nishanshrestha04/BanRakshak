@@ -54,7 +54,7 @@ def run_model_loop():
 
 async def ws_send_loop():
     uri = "ws://192.168.102.198:8000/ws"
-    async with websockets.connect(uri) as ws:
+    async with websockets.connect(uri, ping_interval=None) as ws:
         while True:
             result = await asyncio.get_event_loop().run_in_executor(
                 None, result_queue.get
