@@ -45,10 +45,9 @@ def inference_loop():
             "longitude": "85.342602 E",
             "speed":     "NA",
             "class":     cls,
-            "confidence": float(conf)
+            "confidence": conf
         }
         RESULT_QUEUE.put(result)
-        print(f"[INFER ] {time.time()-t0:.2f}s -> {cls} {conf:.2f}")
 
 
 # 3️⃣  WebSocket sender (runs inside its own event-loop thread) ----------
