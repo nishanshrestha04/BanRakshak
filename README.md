@@ -37,7 +37,7 @@ To get the BanRakshak system up and running, follow these steps.
 ### Prerequisites
 
 - **Hardware:**
-  - Raspberry Pi (for the client)
+  - Raspberry Pi 4(for the client)
   - Microphone
   - GPS Module
 - **Software:**
