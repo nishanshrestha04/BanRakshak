@@ -1,0 +1,157 @@
+[33mcommit 4eb5ab61bf957a061d7adebb8357d44a37eec6d8[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Merge: 02996f5 6849c2e
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sun Jul 13 02:41:29 2025 +0545
+
+    Merge branch 'main' of https://github.com/nishanshrestha04/BanRakshak
+
+[33mcommit 02996f555d6d05723f0a5c8ea8fb2ed7b93d348f[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sun Jul 13 02:40:27 2025 +0545
+
+    new model
+
+[33mcommit 6849c2ea658b4a3457a0b60376ec67b54a7250a9[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sun Jul 13 02:37:08 2025 +0545
+
+    made changes
+
+[33mcommit a4c86e4a23694a1c7d2f39ff44d43008f648f2da[m
+Author: NishanShrestha <nishanshrestha212@gmail.com>
+Date:   Sun Jul 13 02:32:22 2025 +0545
+
+    ReUpdate
+
+[33mcommit 46605a721b211ed6ad50b3d86ddc8da1350d614f[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sun Jul 13 02:25:36 2025 +0545
+
+    new init
+
+[33mcommit 1c5f562afb6a81fff3efd13a2e4475a6c9e4beec[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sun Jul 13 02:16:10 2025 +0545
+
+    added new label and model
+
+[33mcommit b2b2c23b37f794003dce1f1ecfe58d3157c63fe8[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sun Jul 13 02:08:56 2025 +0545
+
+    made changes in server.yp
+
+[33mcommit f19c2fb0ba38c502fe7f162e4a6926f55a963895[m
+Author: NishanShrestha <nishanshrestha212@gmail.com>
+Date:   Sun Jul 13 01:18:18 2025 +0545
+
+    Your message here
+
+[33mcommit 2319e082b284b02a460bddeae99543e802676992[m
+Author: NishanShrestha <nishanshrestha212@gmail.com>
+Date:   Sun Jul 13 01:12:57 2025 +0545
+
+    Second Commit
+
+[33mcommit 46d4289c6d8b3a9cf834abba7424d0f488434ef0[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sun Jul 13 00:27:38 2025 +0545
+
+    changed the microphone
+
+[33mcommit c147160c2da7bfbf68a559fdc005bc2ba129fdb8[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sun Jul 13 00:01:58 2025 +0545
+
+    wrote extra logs
+
+[33mcommit 123d76c1fbebade5d4e24a077092b4133851eacc[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 23:53:52 2025 +0545
+
+    issue with circular import
+
+[33mcommit 44d251e2cfc69e0e61afad165fbd0889f536c09d[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 23:52:06 2025 +0545
+
+    refactored run_inference
+
+[33mcommit 8bfee2afbc6093c835c5dee0eec534963d4ee0fb[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sat Jul 12 23:50:46 2025 +0545
+
+    added some changes
+
+[33mcommit 5bd8d47535c597b6e9d9d287faa88da5c037cef0[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 23:36:20 2025 +0545
+
+    optimized controller.py
+
+[33mcommit 128f253259d5ecc99a20c960145b95be89061792[m
+Merge: ed2fa1a 9194104
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sat Jul 12 23:13:22 2025 +0545
+
+    Merge branch 'main' of https://github.com/nishanshrestha04/BanRakshak
+
+[33mcommit ed2fa1ae1a0e8cccf66f53c3eb20a54e7a7fdb76[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sat Jul 12 23:12:11 2025 +0545
+
+    Added files
+
+[33mcommit 919410444ccb035c1d95594209d2b5b87ecc1668[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 22:42:31 2025 +0545
+
+    added logs in server.py
+
+[33mcommit bb2f0845c132f7b1e3778d2c31e94b8ea582e2c1[m
+Author: Manjil Budhathoki <budhathokimanjil69@gmail.com>
+Date:   Sat Jul 12 21:59:48 2025 +0545
+
+    Add AudioClassifier notebook
+
+[33mcommit efef5d64461057cbfb3a6e5cc6db79a004c6320d[m
+Author: Rishav Beejukchhen <140785378+Spicyredd@users.noreply.github.com>
+Date:   Sat Jul 12 21:47:10 2025 +0545
+
+    Updated payload.txt
+
+[33mcommit 7db9a4b70f4e1daf09a9d06c4b96d813cfa0c98c[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sat Jul 12 21:45:24 2025 +0545
+
+    updated model_inference to be compatible with async/websockets
+
+[33mcommit b17a055ac9e8687aa8018d0ab628d2c45abadd4e[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 21:19:55 2025 +0545
+
+    added another thread
+
+[33mcommit afea860cda85899cc311552099aa6080ca34ac8e[m
+Author: Rishav Beejukchhen <rbeeju20@gmail.com>
+Date:   Sat Jul 12 21:02:51 2025 +0545
+
+    Added Required Files
+
+[33mcommit 15562067dbcf248f30ec11cf7001e3780becdbfe[m
+Author: shankar-tamang <alwaysshankartamang@gmail.com>
+Date:   Sat Jul 12 13:11:54 2025 +0545
+
+    added a demo backend
+
+[33mcommit db60f730bc4b4c87148bd495276b5acef4513d19[m
+Author: NishanShrestha <nishanshrestha212@gmail.com>
+Date:   Sat Jul 12 10:52:43 2025 +0545
+
+    Update
+
+[33mcommit 63e1a6f474dfcdddc6e4b810f3119577de87df27[m
+Author: NishanShrestha <nishanshrestha212@gmail.com>
+Date:   Sat Jul 12 09:49:46 2025 +0545
+
+    Frontend
