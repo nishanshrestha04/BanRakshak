@@ -6,7 +6,7 @@ import joblib
 from tensorflow.keras.models import load_model
 
 print("Loading Label Binarizer")
-label_binarizer = joblib.load('label_binarizer (3).pkl')
+label_binarizer = joblib.load('label_binarizer (5).pkl')
 print("Loaded Sucessfully")
 
 print("Loading YAMNet model...")
@@ -14,7 +14,7 @@ yamnet_model = hub.load('https://tfhub.dev/google/yamnet/1')
 print("YAMNet loaded.")
 
 print("Loading Keras Model")
-keras_model = load_model('multi_class_audio_classifier (3).h5')
+keras_model = load_model('multi_class_audio_classifier (5).h5')
 print("Keras Model Loaded SucessFully.")
 
 def run_inference(waveform, sr=16000, window_size=2.0, hop_size=1.0,
