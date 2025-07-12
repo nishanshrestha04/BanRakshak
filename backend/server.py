@@ -27,6 +27,9 @@ async def relay(ws: WebSocket):
             # === PRINT THE RECEIVED MESSAGE ===
             print(f"📩 Received from {ws.client}: {msg}")
 
+            print("\n----------------------------------- \n ")
+            print(f"Axe_Chopping Confidence: {msg["confidence"]}")
+
             # ensure id + timestamp
             msg.setdefault("id", str(uuid.uuid4()))
             msg.setdefault("timestamp", iso_now())
