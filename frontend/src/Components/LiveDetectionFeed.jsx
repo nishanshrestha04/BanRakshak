@@ -9,10 +9,25 @@ import {
 } from "lucide-react";
 
 const LiveDetectionFeed = ({ wsData, isConnected, recentDetections = [] }) => {
-    const getThreatLevel = (soundType) => {
+    const getThreatLevel = (soundType, confidence = 0) => {
         const type = soundType?.toLowerCase();
+
         if (type === "axe_cutting" || type === "chainsaw") {
-            return "high";
+            // Parse confidence value to get actual percentage
+            let confValue = parseFloat(confidence);
+            if (confValue > 100) {
+                confValue = confValue / 100;
+            } else if (confValue <= 1) {
+                confValue = confValue * 100;
+            }
+
+            if (confValue >= 50) {
+                return "high";
+            } else if (confValue >= 10) {
+                return "medium";
+            } else {
+                return "low";
+            }
         } else if (
             type === "truck" ||
             type === "human_voice" ||
@@ -212,7 +227,8 @@ const LiveDetectionFeed = ({ wsData, isConnected, recentDetections = [] }) => {
                         {recentDetections.length > 0 ? (
                             recentDetections.map((detection) => {
                                 const threatLevel = getThreatLevel(
-                                    detection.type
+                                    detection.type,
+                                    detection.confidence
                                 );
                                 return (
                                     <div

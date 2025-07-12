@@ -10,10 +10,25 @@ const SidebarInfo = ({
     lastUpdateTime,
     payloadData = [],
 }) => {
-    const getThreatLevel = (soundType) => {
+    const getThreatLevel = (soundType, confidence = 0) => {
         const type = soundType?.toLowerCase();
+
         if (type === "axe_cutting" || type === "chainsaw") {
-            return "high";
+            // Parse confidence value to get actual percentage
+            let confValue = parseFloat(confidence);
+            if (confValue > 100) {
+                confValue = confValue / 100;
+            } else if (confValue <= 1) {
+                confValue = confValue * 100;
+            }
+
+            if (confValue >= 50) {
+                return "high";
+            } else if (confValue >= 10) {
+                return "medium";
+            } else {
+                return "low";
+            }
         } else if (
             type === "truck" ||
             type === "human_voice" ||
@@ -89,7 +104,10 @@ const SidebarInfo = ({
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                     {recentDetections.length > 0 ? (
                         recentDetections.map((detection) => {
-                            const threatLevel = getThreatLevel(detection.type);
+                            const threatLevel = getThreatLevel(
+                                detection.type,
+                                detection.confidence
+                            );
                             return (
                                 <div
                                     key={detection.id}
@@ -142,7 +160,10 @@ const SidebarInfo = ({
                 <div className="space-y-3">
                     {soundTypes.length > 0 ? (
                         soundTypes.map((type, index) => {
-                            const threatLevel = getThreatLevel(type.name);
+                            const threatLevel = getThreatLevel(
+                                type.name,
+                                type.confidence
+                            );
                             return (
                                 <div
                                     key={index}

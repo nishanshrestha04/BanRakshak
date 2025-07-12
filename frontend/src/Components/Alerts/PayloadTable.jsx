@@ -2,6 +2,49 @@ import React, { useMemo } from "react";
 import { Clock, MapPin, Activity, Database, Target } from "lucide-react";
 
 const PayloadTable = ({ payloadData = [] }) => {
+    const getThreatLevel = (soundType, confidence = 0) => {
+        const type = soundType?.toLowerCase();
+
+        if (type === "axe_cutting" || type === "chainsaw") {
+            // Parse confidence value to get actual percentage
+            let confValue = parseFloat(confidence);
+            if (confValue > 100) {
+                confValue = confValue / 100;
+            } else if (confValue <= 1) {
+                confValue = confValue * 100;
+            }
+
+            if (confValue >= 50) {
+                return "high";
+            } else if (confValue >= 10) {
+                return "medium";
+            } else {
+                return "low";
+            }
+        } else if (
+            type === "truck" ||
+            type === "human_voice" ||
+            type === "machinery"
+        ) {
+            return "medium";
+        } else {
+            return "low";
+        }
+    };
+
+    const getThreatColor = (threat) => {
+        switch (threat) {
+            case "high":
+                return "text-red-600 bg-red-100";
+            case "medium":
+                return "text-yellow-600 bg-yellow-100";
+            case "low":
+                return "text-green-600 bg-green-100";
+            default:
+                return "text-gray-600 bg-gray-100";
+        }
+    };
+
     const displayPayloads = useMemo(() => {
         return payloadData.slice(0, 5).map((payload, index) => {
             console.log(`Processing payload ${index + 1}:`, payload);
@@ -159,15 +202,30 @@ const PayloadTable = ({ payloadData = [] }) => {
                                                                 }
                                                             </span>
                                                         </div>
-                                                        <span
-                                                            className={`text-xs px-2 py-1 rounded ${getConfidenceColor(
-                                                                detection.confidence
-                                                            )}`}
-                                                        >
-                                                            {formatConfidence(
-                                                                detection.confidence
-                                                            )}
-                                                        </span>
+                                                        <div className="flex items-center space-x-2">
+                                                            <span
+                                                                className={`text-xs px-2 py-1 rounded ${getConfidenceColor(
+                                                                    detection.confidence
+                                                                )}`}
+                                                            >
+                                                                {formatConfidence(
+                                                                    detection.confidence
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                className={`text-xs px-2 py-1 rounded ${getThreatColor(
+                                                                    getThreatLevel(
+                                                                        detection.class,
+                                                                        detection.confidence
+                                                                    )
+                                                                )}`}
+                                                            >
+                                                                {getThreatLevel(
+                                                                    detection.class,
+                                                                    detection.confidence
+                                                                )}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 )
                                             )}
