@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@theme {
+    --font-amita: "Amita", serif;
+    --font-montserrat: "Montserrat", sans-serif;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for webkit browsers */
+* {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+/* Ensure html and body still allow scrolling */
+html,
+body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
