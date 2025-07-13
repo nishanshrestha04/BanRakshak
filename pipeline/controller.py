@@ -11,6 +11,7 @@ from run_inference import run_inference
 import logging
 
 warnings.filterwarnings("ignore")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 latest_audio = None
 sample_rate = None
 
